@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { sendIntegrityEvent, startAssessment, submitAssessmentAnswer, type AssessmentMode, type AssessmentSessionView } from '../lib/assessmentApi'
 import { useAuth } from '../lib/auth'
+import { initialExamSelection, isOrderingAssessment, selectionForItem, type ExamSelection } from '../lib/examSelection'
 
 const familyNames = { javascript: 'JavaScript', frontend: 'React and Next.js', backend: 'APIs and databases', fullstack: 'Full-stack', git: 'Git and GitHub' }
-const isOrdering = (type: string) => type === 'ordering' || type === 'http-flow' || type === 'git-sequencing'
 
 export function ExamPage() {
   const { mode } = useParams()
@@ -15,12 +15,25 @@ export function ExamPage() {
   const reduceMotion = useReducedMotion()
   const validMode: AssessmentMode | null = mode === 'strict' || mode === 'flexible' ? mode : null
   const [session, setSession] = useState<AssessmentSessionView | null>(null)
-  const [selected, setSelected] = useState<string[]>([])
+  const [selection, setSelection] = useState<ExamSelection>({ itemId: null, ids: [] })
   const [now, setNow] = useState(Date.now())
   const [warning, setWarning] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const submittedItem = useRef<string | null>(null)
+  const item = session?.item
+  const selected = useMemo(() => selectionForItem(item, selection), [item, selection])
+
+  const updateSelected = useCallback((update: string[] | ((values: string[]) => string[])) => {
+    if (!item) return
+    setSelection((current) => {
+      const currentIds = selectionForItem(item, current)
+      return {
+        itemId: item.id,
+        ids: typeof update === 'function' ? update(currentIds) : update,
+      }
+    })
+  }, [item])
 
   useEffect(() => {
     if (!validMode || !auth.user) return
@@ -34,8 +47,7 @@ export function ExamPage() {
   }, [auth.user, validMode])
 
   useEffect(() => {
-    const ids = session?.item && isOrdering(session.item.type) ? session.item.options.map((option) => option.id) : []
-    setSelected(ids)
+    setSelection(initialExamSelection(session?.item))
     submittedItem.current = null
   }, [session?.item?.id])
 
@@ -80,7 +92,6 @@ export function ExamPage() {
     return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [navigate, session?.id, session?.mode])
 
-  const item = session?.item
   const selectedSet = useMemo(() => new Set(selected), [selected])
   if (!validMode) return <Navigate to="/assess" replace />
   if (!auth.configured || !auth.user) return <Navigate to="/assess" replace />
@@ -88,8 +99,8 @@ export function ExamPage() {
   if (!session || !item) return <div className="page centered-state"><span className="loading-mark" /><p>Securing your first item...</p></div>
 
   const toggle = (id: string) => {
-    if (item.type === 'single-choice') setSelected([id])
-    else setSelected((values) => values.includes(id) ? values.filter((value) => value !== id) : [...values, id])
+    if (item.type === 'single-choice') updateSelected([id])
+    else updateSelected((values) => values.includes(id) ? values.filter((value) => value !== id) : [...values, id])
   }
 
   return (
@@ -106,13 +117,36 @@ export function ExamPage() {
         <div className="exam-meta"><span>{familyNames[item.family]}</span><span>Difficulty {item.difficulty} / 5</span><span>{item.type.replace('-', ' ')}</span></div>
         <motion.h1 key={item.id} initial={reduceMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>{item.prompt}</motion.h1>
 
-        {isOrdering(item.type) ? (
+        {isOrderingAssessment(item.type) ? (
           <div className="ordering-wrap">
             <p>Drag the rows or use the move controls to create the correct order.</p>
-            <Reorder.Group axis="y" values={selected} onReorder={setSelected} className="ordering-list">
+            <Reorder.Group axis="y" values={selected} onReorder={updateSelected} className="ordering-list">
               {selected.map((id, index, list) => {
-                const option = item.options.find((candidate) => candidate.id === id)!
-                return <Reorder.Item value={id} key={id} className="order-option"><DotsSixVertical /><span className="order-number">{index + 1}</span><span>{option.label}</span><div className="order-buttons"><button aria-label="Move up" disabled={index === 0} onClick={() => { const copy = [...list]; [copy[index - 1], copy[index]] = [copy[index], copy[index - 1]]; setSelected(copy) }}>↑</button><button aria-label="Move down" disabled={index === list.length - 1} onClick={() => { const copy = [...list]; [copy[index + 1], copy[index]] = [copy[index], copy[index + 1]]; setSelected(copy) }}>↓</button></div></Reorder.Item>
+                const option = item.options.find((candidate) => candidate.id === id)
+                if (!option) return null
+                return (
+                  <Reorder.Item value={id} key={id} className="order-option">
+                    <DotsSixVertical />
+                    <span className="order-number">{index + 1}</span>
+                    <span>{option.label}</span>
+                    <div className="order-buttons">
+                      <button aria-label="Move up" disabled={index === 0} onClick={() => {
+                        const copy = [...list]
+                        const previous = copy[index - 1]
+                        copy[index - 1] = copy[index]
+                        copy[index] = previous
+                        updateSelected(copy)
+                      }}>↑</button>
+                      <button aria-label="Move down" disabled={index === list.length - 1} onClick={() => {
+                        const copy = [...list]
+                        const next = copy[index + 1]
+                        copy[index + 1] = copy[index]
+                        copy[index] = next
+                        updateSelected(copy)
+                      }}>↓</button>
+                    </div>
+                  </Reorder.Item>
+                )
               })}
             </Reorder.Group>
           </div>
@@ -126,7 +160,7 @@ export function ExamPage() {
           </div>
         )}
 
-        <div className="exam-submit"><span>{item.type === 'multiple-select' ? 'Select every correct statement.' : isOrdering(item.type) ? 'The current row order will be submitted.' : 'Choose one answer.'}</span><button className="button primary" onClick={() => void submit()} disabled={submitting || (!isOrdering(item.type) && selected.length === 0)}>{submitting ? 'Locking...' : 'Lock answer'} <ArrowRight /></button></div>
+        <div className="exam-submit"><span>{item.type === 'multiple-select' ? 'Select every correct statement.' : isOrderingAssessment(item.type) ? 'The current row order will be submitted.' : 'Choose one answer.'}</span><button className="button primary" onClick={() => void submit()} disabled={submitting || (!isOrderingAssessment(item.type) && selected.length === 0)}>{submitting ? 'Locking...' : 'Lock answer'} <ArrowRight /></button></div>
       </main>
     </div>
   )

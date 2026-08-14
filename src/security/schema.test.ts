@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const migration = readFileSync('supabase/migrations/0001_interview_lab.sql', 'utf8')
+const assessmentFunction = readFileSync('supabase/functions/assessment-api/index.ts', 'utf8')
 
 describe('database authorization boundary', () => {
   it('enables RLS on every candidate or public data table', () => {
@@ -23,5 +24,19 @@ describe('database authorization boundary', () => {
     expect(signature).toContain('band text')
     expect(signature).not.toContain('user_id')
     expect(signature).not.toContain('email')
+  })
+})
+
+describe('assessment resume boundary', () => {
+  it('resumes an owned active session before requiring a new one-time Turnstile token', () => {
+    const startFunction = assessmentFunction.slice(
+      assessmentFunction.indexOf('async function start'),
+      assessmentFunction.indexOf('async function answer'),
+    )
+    const activeSessionBranch = startFunction.indexOf('if (active)')
+    const turnstileVerification = startFunction.indexOf('await verifyTurnstile(body.turnstileToken, request)')
+
+    expect(activeSessionBranch).toBeGreaterThan(-1)
+    expect(turnstileVerification).toBeGreaterThan(activeSessionBranch)
   })
 })

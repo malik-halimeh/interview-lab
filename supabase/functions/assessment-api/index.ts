@@ -146,7 +146,6 @@ async function finishSession(session: any, responses: ScoredResponse[]) {
 async function start(request: Request, user: any) {
   if ((Deno.env.get('ASSESSMENTS_ENABLED') ?? 'true') !== 'true') return json({ error: 'Assessment starts are temporarily disabled to protect the free-service quota. Study mode remains available.' }, 503)
   const body = await request.json()
-  await verifyTurnstile(body.turnstileToken, request)
   if (body.mode !== 'flexible' && body.mode !== 'strict') return json({ error: 'Invalid assessment mode.' }, 400)
   const { data: profile } = await db.from('profiles').select('consented_at').eq('id', user.id).single()
   if (!profile?.consented_at) return json({ error: 'Accept the assessment publishing notice before starting.' }, 409)
@@ -157,6 +156,10 @@ async function start(request: Request, user: any) {
     await db.from('integrity_events').insert({ session_id: active.id, user_id: user.id, event_type: 'reload' })
     return json(await sessionView(active))
   }
+
+  // Turnstile tokens are single-use. Verify only when creating a new session;
+  // an authenticated resume is authorized by the active session's ownership.
+  await verifyTurnstile(body.turnstileToken, request)
 
   const familyOrder = shuffle<TopicFamily>(['javascript', 'frontend', 'backend', 'fullstack', 'git'])
   const priorSequences = await getPriorSequences(user.id)
