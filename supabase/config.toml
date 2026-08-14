@@ -1,0 +1,4 @@
+project_id = "interview-lab"
+
+[functions.assessment-api]
+verify_jwt = false
