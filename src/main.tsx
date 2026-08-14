@@ -7,7 +7,15 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { App } from './App'
+import { clearRecoveryMarker, recoverFromStaleBuild } from './lib/appRecovery'
 import './styles.css'
+
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault()
+  void recoverFromStaleBuild()
+})
+
+window.setTimeout(clearRecoveryMarker, 10_000)
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
