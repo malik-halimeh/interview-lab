@@ -1,4 +1,4 @@
-import { ArrowRight, MagnifyingGlass } from '@phosphor-icons/react'
+import { ArrowRight, MagnifyingGlass, Play } from '@phosphor-icons/react'
 import { useDeferredValue, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '../components/PageHeader'
@@ -25,24 +25,32 @@ export function LibraryPage() {
   }
 
   return (
-    <div className="page">
-      <PageHeader eyebrow="200 visual explanations" title="Question library" description="Search by the concept you need to explain, not by a memorized script." />
+    <div className="page library-page">
+      <PageHeader
+        eyebrow="DigitalHub field manual / 200 visual explanations"
+        title="The interview library"
+        description="Study in sequence from question 001, or search for the exact system you need to explain with confidence."
+        actions={<Link className="button primary" to={`/lesson/${studyQuestions[0].slug}`}>Start at 001 <Play weight="fill" /></Link>}
+      />
       <div className="library-toolbar">
         <label className="search-field"><MagnifyingGlass /><span className="sr-only">Search questions</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search closures, indexes, hydration..." /></label>
         <div className="filter-row" role="group" aria-label="Filter by topic">
           {topics.map((value) => <button key={value} className={topic === value ? 'selected' : ''} onClick={() => chooseTopic(value)}>{value === 'all' ? 'All topics' : topicLabels[value]}</button>)}
         </div>
       </div>
-      <p className="result-count">{filtered.length} questions</p>
+      <div className="library-result-line"><p className="result-count">{filtered.length} questions</p><span>Open-ended practice / interactive explanation / private notes</span></div>
       <div className="question-list">
-        {filtered.map((question) => (
-          <Link className="question-row" to={`/lesson/${question.slug}`} key={question.id}>
-            <span className="question-id">{question.id.toUpperCase()}</span>
-            <span className="question-main"><strong>{question.title}</strong><span>{question.prompt}</span></span>
-            <span className="difficulty">L{question.difficulty}</span>
-            <ArrowRight />
-          </Link>
-        ))}
+        {filtered.map((question) => {
+          const sequence = studyQuestions.findIndex((item) => item.id === question.id) + 1
+          return (
+            <Link className="question-row" to={`/lesson/${question.slug}`} key={question.id}>
+              <span className="question-id">{String(sequence).padStart(3, '0')}</span>
+              <span className="question-main"><span className="question-topic">{topicLabels[question.topic]}</span><strong>{question.title}</strong><span>{question.prompt}</span></span>
+              <span className="difficulty">LEVEL {question.difficulty}</span>
+              <ArrowRight />
+            </Link>
+          )
+        })}
       </div>
     </div>
   )

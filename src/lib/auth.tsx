@@ -17,7 +17,7 @@ interface AuthContextValue {
   user: User | null
   session: Session | null
   profile: CandidateProfile
-  signIn: () => Promise<void>
+  signIn: (returnTo?: string) => Promise<void>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -86,11 +86,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: session?.user ?? null,
     session,
     profile,
-    signIn: async () => {
+    signIn: async (returnTo = '/assess') => {
       if (!supabase) return
+      const safeReturnTo = returnTo.startsWith('/') ? returnTo : '/assess'
       await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/assess` }
+        options: { redirectTo: `${window.location.origin}${safeReturnTo}` }
       })
     },
     signOut: async () => {

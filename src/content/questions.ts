@@ -78,6 +78,18 @@ export const studyQuestions: StudyQuestion[] = Object.entries(conceptGroups).fla
 export const studyQuestionBySlug = new Map(studyQuestions.map((question) => [question.slug, question]))
 export const studyQuestionById = new Map(studyQuestions.map((question) => [question.id, question]))
 
+export const getStudySequence = (slug: string) => {
+  const index = studyQuestions.findIndex((question) => question.slug === slug)
+  if (index < 0) return null
+  return {
+    index,
+    position: index + 1,
+    total: studyQuestions.length,
+    previous: index > 0 ? studyQuestions[index - 1] : null,
+    next: index < studyQuestions.length - 1 ? studyQuestions[index + 1] : null
+  }
+}
+
 export const topicLabels: Record<Topic, string> = {
   javascript: 'JavaScript',
   react: 'React',

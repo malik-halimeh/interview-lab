@@ -9,11 +9,11 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'Interview Lab',
-        short_name: 'Interview Lab',
-        description: 'Animated full-stack interview preparation and adaptive assessment.',
-        theme_color: '#315bd6',
-        background_color: '#f3f5f8',
+        name: 'DigitalHub 1st Interview Mock Up',
+        short_name: 'DigitalHub Mock',
+        description: 'Animated full-stack interview preparation and adaptive assessment for DigitalHub candidates.',
+        theme_color: '#2557e0',
+        background_color: '#f4f6fa',
         display: 'standalone',
         start_url: '/',
         icons: [

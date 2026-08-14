@@ -1,12 +1,12 @@
-import { ArrowLeft, ArrowSquareOut, Check } from '@phosphor-icons/react'
+import { ArrowLeft, ArrowRight, ArrowSquareOut, Check, List } from '@phosphor-icons/react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { ScenePlayer } from '../components/ScenePlayer'
-import { studyQuestionBySlug, topicLabels } from '../content/questions'
+import { getStudySequence, studyQuestionBySlug, topicLabels } from '../content/questions'
+import { useAuth } from '../lib/auth'
 import { db, syncStudyData } from '../lib/db'
 import { newReviewState, scheduleReview, type ReviewRating } from '../lib/scheduler'
-import { useAuth } from '../lib/auth'
 
 export function LessonPage() {
   const auth = useAuth()
@@ -16,7 +16,20 @@ export function LessonPage() {
   const [answer, setAnswer] = useState('')
   const [revealed, setRevealed] = useState(false)
   const [saved, setSaved] = useState(false)
-  if (!question) return <Navigate to="/library" replace />
+  const sequence = slug ? getStudySequence(slug) : null
+  const questionIndex = sequence?.index ?? -1
+  const previousQuestion = sequence?.previous ?? null
+  const nextQuestion = sequence?.next ?? null
+
+  useEffect(() => {
+    if (!question) return
+    setAnswer('')
+    setRevealed(false)
+    setSaved(false)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [question?.id])
+
+  if (!question || !sequence) return <Navigate to="/library" replace />
 
   const rate = async (rating: ReviewRating) => {
     const base = existing ?? { questionId: question.id, ...newReviewState(), completed: false, confidence: null, updatedAt: new Date().toISOString() }
@@ -32,9 +45,17 @@ export function LessonPage() {
 
   return (
     <div className="page lesson-page">
-      <Link to="/library" className="back-link"><ArrowLeft /> Back to library</Link>
+      <nav className="lesson-toolbar" aria-label="Lesson sequence">
+        <Link to="/library" className="back-link"><List /> All 200 questions</Link>
+        <span className="lesson-position">{String(sequence.position).padStart(3, '0')} / {sequence.total}</span>
+        <div className="lesson-step-links">
+          {previousQuestion ? <Link to={`/lesson/${previousQuestion.slug}`} aria-label={`Previous lesson: ${previousQuestion.title}`}><ArrowLeft /></Link> : <span aria-hidden="true" />}
+          {nextQuestion ? <Link to={`/lesson/${nextQuestion.slug}`} aria-label={`Next lesson: ${nextQuestion.title}`}><ArrowRight /></Link> : <Link to="/library" aria-label="Return to library"><List /></Link>}
+        </div>
+      </nav>
+      <div className="lesson-progress-track" aria-hidden="true"><span style={{ width: `${(sequence.position / sequence.total) * 100}%` }} /></div>
       <div className="lesson-title">
-        <div><span className="eyebrow">{topicLabels[question.topic]} · Level {question.difficulty}</span><h1>{question.title}</h1><p>{question.prompt}</p></div>
+        <div><span className="eyebrow">{topicLabels[question.topic]} / Level {question.difficulty}</span><h1>{question.title}</h1><p>{question.prompt}</p></div>
         <span className="lesson-code">{question.id.toUpperCase()}</span>
       </div>
       <section className="attempt-panel">
@@ -56,6 +77,10 @@ export function LessonPage() {
           </section>
         </div>
       )}
+      <nav className="lesson-sequence" aria-label="Continue studying">
+        <div className="sequence-copy"><span>Continue the field manual</span><strong>{nextQuestion ? nextQuestion.title : 'You reached question 200'}</strong><p>{nextQuestion ? `${topicLabels[nextQuestion.topic]} / Level ${nextQuestion.difficulty}` : 'Return to the library and revisit any concept.'}</p></div>
+        {nextQuestion ? <Link className="button primary next-lesson-button" to={`/lesson/${nextQuestion.slug}`}>Next question <span>{String(questionIndex + 2).padStart(3, '0')}</span><ArrowRight /></Link> : <Link className="button primary next-lesson-button" to="/library">Finish library <List /></Link>}
+      </nav>
     </div>
   )
 }

@@ -94,7 +94,7 @@ export function AssessPage() {
 
       <section className="privacy-explainer">
         <EyeSlash size={26} />
-        <div><h2>Your identity stays private</h2><p>Eligible scores publish under <strong>{auth.profile.nickname}</strong>. Your Google name never appears unless you explicitly publish it from Profile. You can hide your score later.</p></div>
+        <div><h2>Your identity stays private</h2><p>{auth.user ? <>Eligible scores publish under <strong>{auth.profile.nickname}</strong>. Your Google name never appears unless you explicitly publish it from Profile.</> : <>After sign-in, you receive a private generated nickname for eligible scores. No candidate identity is shown on this signed-out page.</>} You can hide your score later.</p></div>
       </section>
 
       <p className="assessment-disclaimer">Strict mode discourages outside help but is not supervised proctoring. Results are provisional readiness estimates, not hiring decisions.</p>

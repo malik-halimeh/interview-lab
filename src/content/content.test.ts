@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { assessmentItems } from '../../server/assessmentBank'
-import { studyQuestions } from './questions'
+import { getStudySequence, studyQuestions } from './questions'
 
 describe('question bank', () => {
   it('contains the exact requested distribution', () => {
@@ -21,6 +21,16 @@ describe('question bank', () => {
       expect(question.keyPoints.length).toBeGreaterThanOrEqual(3)
       expect(question.modelAnswer.length).toBeGreaterThan(80)
       expect(question.reference.url).toMatch(/^https:/)
+    }
+  })
+
+  it('provides a continuous previous and next path through all 200 lessons', () => {
+    for (const [index, question] of studyQuestions.entries()) {
+      const sequence = getStudySequence(question.slug)
+      expect(sequence?.position).toBe(index + 1)
+      expect(sequence?.total).toBe(200)
+      expect(sequence?.previous?.slug ?? null).toBe(studyQuestions[index - 1]?.slug ?? null)
+      expect(sequence?.next?.slug ?? null).toBe(studyQuestions[index + 1]?.slug ?? null)
     }
   })
 
