@@ -142,7 +142,7 @@ declare
   suffix integer;
 begin
   loop
-    suffix := (get_byte(gen_random_bytes(2), 0) * 256 + get_byte(gen_random_bytes(2), 1)) % 10000;
+    suffix := (get_byte(extensions.gen_random_bytes(2), 0) * 256 + get_byte(extensions.gen_random_bytes(2), 1)) % 10000;
     candidate := adjectives[1 + floor(random() * array_length(adjectives, 1))::int]
       || nouns[1 + floor(random() * array_length(nouns, 1))::int]
       || '-' || lpad(suffix::text, 4, '0');
@@ -197,8 +197,8 @@ $$;
 
 grant execute on function public.public_leaderboard(public.assessment_mode) to anon, authenticated;
 
-revoke execute on function public.make_private_nickname() from public;
-revoke execute on function public.create_candidate_profile() from public;
+revoke execute on function public.make_private_nickname() from public, anon, authenticated;
+revoke execute on function public.create_candidate_profile() from public, anon, authenticated;
 
 revoke all on public.profiles from anon;
 revoke update on public.profiles from authenticated;
@@ -225,5 +225,5 @@ begin
 end;
 $$;
 
-revoke all on function public.remove_leaderboard_entry(uuid, text) from public;
+revoke all on function public.remove_leaderboard_entry(uuid, text) from public, anon;
 grant execute on function public.remove_leaderboard_entry(uuid, text) to authenticated;
