@@ -77,6 +77,7 @@ export const submitAssessmentAnswer = (sessionId: string, itemId: string, answer
 
 export const sendIntegrityEvent = (sessionId: string, eventType: 'focus-hidden' | 'reload') => request<AssessmentSessionView>(`/assessment/${sessionId}/integrity-event`, {
   method: 'POST',
+  keepalive: true,
   body: JSON.stringify({ eventType })
 })
 

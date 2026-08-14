@@ -39,4 +39,15 @@ describe('assessment resume boundary', () => {
     expect(activeSessionBranch).toBeGreaterThan(-1)
     expect(turnstileVerification).toBeGreaterThan(activeSessionBranch)
   })
+
+  it('ends a Strict assessment on the first focus loss', () => {
+    const integrityFunction = assessmentFunction.slice(
+      assessmentFunction.indexOf('async function integrity'),
+      assessmentFunction.indexOf('async function result'),
+    )
+
+    expect(integrityFunction).toContain('leaderboard_eligible: false')
+    expect(integrityFunction).toContain('finishSession(updated')
+    expect(integrityFunction).not.toContain('focusEvents < 2')
+  })
 })

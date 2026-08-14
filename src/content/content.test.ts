@@ -29,4 +29,13 @@ describe('question bank', () => {
     expect(new Set(assessmentItems.map((item) => item.studyQuestionId)).size).toBe(200)
     expect(new Set(assessmentItems.map((item) => item.type))).toEqual(new Set(['single-choice', 'multiple-select', 'ordering', 'code-output', 'debugging-patch', 'http-flow', 'sql-reasoning', 'git-sequencing']))
   })
+
+  it('uses distinct, topic-specific practical statements in scored options', () => {
+    const practicalOptions = assessmentItems.flatMap((item) => item.options.filter((option) => option.id === 'correct-practice'))
+    expect(practicalOptions.length).toBeGreaterThan(0)
+    expect(new Set(practicalOptions.map((option) => option.label)).size).toBe(practicalOptions.length)
+    expect(assessmentItems.flatMap((item) => item.options).map((option) => option.label)).not.toContain(
+      'Give one practical situation where the distinction affects implementation.',
+    )
+  })
 })

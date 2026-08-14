@@ -64,7 +64,7 @@ export const studyQuestions: StudyQuestion[] = Object.entries(conceptGroups).fla
       keyPoints: [
         concept.focus,
         `Describe the observable behavior of ${concept.title.toLowerCase()}.`,
-        `Give one practical situation where the distinction affects implementation.`
+        `Trace ${concept.title.toLowerCase()} from ${nodes[0].toLowerCase()} through ${nodes[1].toLowerCase()}, then verify its effect on ${nodes[2].toLowerCase()}.`
       ],
       commonMistake: `A common mistake is memorizing a one-line definition of ${concept.title.toLowerCase()} without explaining the runtime behavior or tradeoff.`,
       followUp: `How would you demonstrate ${concept.title.toLowerCase()} with the smallest useful code or architecture example?`,

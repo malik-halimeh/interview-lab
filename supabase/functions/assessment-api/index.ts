@@ -232,10 +232,12 @@ async function integrity(request: Request, user: any, sessionId: string) {
   await db.from('integrity_events').insert({ session_id: session.id, user_id: user.id, event_type: body.eventType })
   if (session.mode !== 'strict' || body.eventType !== 'focus-hidden') return json(await sessionView(session))
   const focusEvents = session.focus_events + 1
-  const eligible = focusEvents < 2
-  const { data: updated } = await db.from('assessment_sessions').update({ focus_events: focusEvents, leaderboard_eligible: eligible }).eq('id', session.id).select().single()
-  if (!eligible) return json(await sessionView(await finishSession(updated, await getResponses(session.id))))
-  return json(await sessionView(updated))
+  const { data: updated, error } = await db.from('assessment_sessions').update({
+    focus_events: focusEvents,
+    leaderboard_eligible: false
+  }).eq('id', session.id).eq('status', 'active').select().single()
+  if (error) throw error
+  return json(await sessionView(await finishSession(updated, await getResponses(session.id))))
 }
 
 async function result(user: any, sessionId: string) {

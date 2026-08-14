@@ -17,10 +17,10 @@ export function ExamPage() {
   const [session, setSession] = useState<AssessmentSessionView | null>(null)
   const [selection, setSelection] = useState<ExamSelection>({ itemId: null, ids: [] })
   const [now, setNow] = useState(Date.now())
-  const [warning, setWarning] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const submittedItem = useRef<string | null>(null)
+  const integritySubmitted = useRef<string | null>(null)
   const item = session?.item
   const selected = useMemo(() => selectionForItem(item, selection), [item, selection])
 
@@ -80,16 +80,28 @@ export function ExamPage() {
 
   useEffect(() => {
     if (!session || session.mode !== 'strict') return
-    const onVisibility = () => {
-      if (document.visibilityState !== 'hidden') return
+    const recordFocusLoss = () => {
+      if (integritySubmitted.current === session.id) return
+      integritySubmitted.current = session.id
       void sendIntegrityEvent(session.id, 'focus-hidden').then((updated) => {
         setSession(updated)
-        setWarning(true)
         if (updated.status === 'completed') navigate(`/results/${updated.id}`)
-      }).catch(() => undefined)
+      }).catch(() => {
+        integritySubmitted.current = null
+      })
+    }
+    const onVisibility = () => {
+      if (document.visibilityState !== 'hidden') return
+      recordFocusLoss()
     }
     document.addEventListener('visibilitychange', onVisibility)
-    return () => document.removeEventListener('visibilitychange', onVisibility)
+    window.addEventListener('blur', recordFocusLoss)
+    window.addEventListener('pagehide', recordFocusLoss)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('blur', recordFocusLoss)
+      window.removeEventListener('pagehide', recordFocusLoss)
+    }
   }, [navigate, session?.id, session?.mode])
 
   const selectedSet = useMemo(() => new Set(selected), [selected])
@@ -110,12 +122,18 @@ export function ExamPage() {
         <div className="exam-progress"><span>Question {session.answeredCount + 1} of 20</span><div><span style={{ width: `${(session.answeredCount / 20) * 100}%` }} /></div></div>
         <div className={`timer${remaining <= 10 ? ' urgent' : ''}`}><span>{remaining}</span><small>seconds</small></div>
       </header>
-      {warning && (
-        <div className="integrity-warning" role="alert"><WarningCircle size={20} /><span>{session.leaderboardEligible ? 'Focus change recorded. One more will remove this attempt from the Strict ranking.' : 'This attempt is now private and will not appear on the Strict ranking.'}</span><button onClick={() => setWarning(false)}>Dismiss</button></div>
-      )}
       <main className="exam-main">
         <div className="exam-meta"><span>{familyNames[item.family]}</span><span>Difficulty {item.difficulty} / 5</span><span>{item.type.replace('-', ' ')}</span></div>
-        <motion.h1 key={item.id} initial={reduceMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>{item.prompt}</motion.h1>
+        <motion.h1
+          className="exam-question"
+          key={item.id}
+          initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          onCopy={(event) => event.preventDefault()}
+          onCut={(event) => event.preventDefault()}
+          onContextMenu={(event) => event.preventDefault()}
+          onDragStart={(event) => event.preventDefault()}
+        >{item.prompt}</motion.h1>
 
         {isOrderingAssessment(item.type) ? (
           <div className="ordering-wrap">

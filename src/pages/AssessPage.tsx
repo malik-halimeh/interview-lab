@@ -86,8 +86,8 @@ export function AssessPage() {
           <div className="mode-icon"><Lightning size={31} weight="duotone" /></div>
           <span className="mode-kicker">Strict assessment</span>
           <h2>Answer on instinct.</h2>
-          <p>Forty-five seconds, no pauses. Leaving the assessment twice removes the attempt from the Strict ranking.</p>
-          <ul><li>45-second auto-submit</li><li>First focus change warns</li><li>Second focus change disqualifies</li><li>Private results still remain available</li></ul>
+          <p>Forty-five seconds, no pauses. The first window, tab, or app change ends the Strict attempt and removes it from the ranking.</p>
+          <ul><li>45-second auto-submit</li><li>No window or tab changes</li><li>First focus loss ends the attempt</li><li>Private results still remain available</li></ul>
           <Link className={`button strict-button${unavailable ? ' disabled' : ''}`} aria-disabled={unavailable} to={unavailable ? '/assess' : '/exam/strict'}>Start Strict <ArrowRight /></Link>
         </article>
       </div>
