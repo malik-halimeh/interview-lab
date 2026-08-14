@@ -43,6 +43,18 @@ export interface LeaderboardRow {
   own: boolean
 }
 
+export interface PersonalScoreRow {
+  id: string
+  mode: AssessmentMode
+  completedAt: string
+  grade: number
+  band: AbilityEstimate['band']
+  standardError: number
+  leaderboardEligible: boolean
+  correctCount: number
+  answeredCount: number
+}
+
 const endpoint = import.meta.env.VITE_SUPABASE_URL
   ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/assessment-api`
   : null
@@ -82,6 +94,8 @@ export const sendIntegrityEvent = (sessionId: string, eventType: 'focus-hidden' 
 })
 
 export const getAssessmentResult = (sessionId: string) => request<AssessmentResultView>(`/assessment/${sessionId}/result`)
+
+export const getPersonalScores = (mode: AssessmentMode) => request<PersonalScoreRow[]>(`/assessment/history?mode=${mode}`)
 
 export const acceptAssessmentConsent = () => request<{ accepted: true }>('/profile/assessment-consent', { method: 'POST', body: '{}' })
 

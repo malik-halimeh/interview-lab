@@ -303,8 +303,14 @@ h1, h2, h3 { font-family: 'Space Grotesk Variable', sans-serif; letter-spacing: 
 
 /* Leaderboard and profile */
 .mode-switch { padding: 4px; border: 1px solid var(--line); border-radius: 12px; display: flex; gap: 4px; }
+.score-view-switch { padding: 5px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); display: flex; gap: 4px; }
+.score-view-switch button { min-height: 40px; padding: 0 12px; border-radius: 8px; background: transparent; color: var(--muted); display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+.score-view-switch button.selected { background: var(--ink); color: var(--paper); }
+.score-controls { min-height: 72px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.score-controls > span { color: var(--muted); font: 10px 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: .07em; }
 .board-notice { margin: 28px 0; padding: 15px 18px; border-left: 3px solid var(--cobalt); background: var(--cobalt-soft); display: flex; gap: 12px; align-items: center; }
 .board-notice p { margin: 0; line-height: 1.5; }
+.board-notice button { padding: 0; background: transparent; color: var(--cobalt-strong); font-weight: 600; text-decoration: underline; }
 .leaderboard-table { border-top: 1px solid var(--line-strong); }
 .leaderboard-head, .leaderboard-row { display: grid; grid-template-columns: 80px 1.2fr 1fr 110px; gap: 20px; align-items: center; }
 .leaderboard-head { min-height: 46px; color: var(--muted); font: 10px 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: .08em; }
@@ -316,6 +322,20 @@ h1, h2, h3 { font-family: 'Space Grotesk Variable', sans-serif; letter-spacing: 
 .leaderboard-row strong small { margin-left: 8px; padding: 3px 5px; border-radius: 5px; background: var(--cobalt); color: white; font: 9px 'IBM Plex Mono', monospace; text-transform: uppercase; }
 .leaderboard-row > span:nth-child(3) { color: var(--muted); }
 .leaderboard-row b { font: 600 26px 'Space Grotesk Variable', sans-serif; text-align: right; }
+.personal-score-summary { margin: 28px 0; padding: 18px 20px; border: 1px solid var(--cobalt); border-radius: 8px 20px 8px 20px; background: var(--cobalt-soft); display: flex; align-items: center; gap: 14px; }
+.personal-score-summary > svg { flex: none; color: var(--cobalt-strong); }
+.personal-score-summary div { display: grid; gap: 4px; }
+.personal-score-summary span { color: var(--muted); font-size: 13px; }
+.personal-scores { border-top: 1px solid var(--line-strong); }
+.personal-score-head, .personal-score-row { display: grid; grid-template-columns: 150px minmax(210px, 1fr) 100px 110px 82px; gap: 20px; align-items: center; }
+.personal-score-head { min-height: 46px; color: var(--muted); font: 10px 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: .08em; }
+.personal-score-row { min-height: 86px; padding: 8px 4px; border-top: 1px solid var(--line); }
+.personal-score-row > span:first-child { color: var(--muted); font: 12px 'IBM Plex Mono', monospace; }
+.personal-score-row > span:nth-child(2) { display: grid; gap: 4px; }
+.personal-score-row small { color: var(--muted); font-size: 12px; }
+.personal-score-row b { font: 600 26px 'Space Grotesk Variable', sans-serif; text-align: right; }
+.personal-score-row a { color: var(--cobalt-strong); display: inline-flex; align-items: center; justify-content: flex-end; gap: 5px; font-weight: 600; }
+.scores-signin { margin-top: 34px; }
 .identity-panel { margin: 36px 0 25px; padding: 28px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); display: grid; grid-template-columns: 76px 1fr; gap: 22px; align-items: center; }
 .identity-avatar { width: 76px; height: 76px; border-radius: 15px; background: var(--cobalt); color: white; display: grid; place-items: center; font: 600 24px 'Space Grotesk Variable', sans-serif; }
 .identity-panel span { color: var(--muted); font-size: 13px; }
@@ -420,6 +440,16 @@ h1, h2, h3 { font-family: 'Space Grotesk Variable', sans-serif; letter-spacing: 
   .review-row a { grid-column: 2; }
   .leaderboard-head, .leaderboard-row { grid-template-columns: 52px 1fr 60px; gap: 10px; }
   .leaderboard-head span:nth-child(3), .leaderboard-row > span:nth-child(3) { display: none; }
+  .score-view-switch { margin-top: 20px; width: 100%; }
+  .score-view-switch button { flex: 1; justify-content: center; }
+  .score-controls { align-items: flex-start; flex-direction: column; justify-content: center; gap: 9px; }
+  .personal-score-head { display: none; }
+  .personal-score-row { padding: 17px 2px; grid-template-columns: 1fr 58px; gap: 10px; }
+  .personal-score-row > span:first-child { grid-column: 1; }
+  .personal-score-row > span:nth-child(2) { grid-column: 1; }
+  .personal-score-row > span:nth-child(3) { grid-column: 1; color: var(--muted); }
+  .personal-score-row b { grid-column: 2; grid-row: 1 / span 2; font-size: 32px; }
+  .personal-score-row a { grid-column: 2; grid-row: 3; }
   .setting-row { grid-template-columns: 1fr; gap: 17px; }
   .verification-panel { display: block; }
   .turnstile-widget { margin-top: 18px; }

@@ -51,3 +51,20 @@ describe('assessment resume boundary', () => {
     expect(integrityFunction).not.toContain('focusEvents < 2')
   })
 })
+
+describe('personal score history boundary', () => {
+  it('requires authentication and filters both sessions and responses to the verified owner', () => {
+    const historyFunction = assessmentFunction.slice(
+      assessmentFunction.indexOf('async function personalHistory'),
+      assessmentFunction.indexOf('Deno.serve'),
+    )
+    const authGate = assessmentFunction.indexOf('const user = await requireUser(request)')
+    const historyRoute = assessmentFunction.indexOf("path === '/assessment/history'")
+
+    expect(authGate).toBeGreaterThan(-1)
+    expect(historyRoute).toBeGreaterThan(authGate)
+    expect(historyFunction.match(/\.eq\('user_id', user\.id\)/g)).toHaveLength(2)
+    expect(historyFunction).not.toContain('leaderboard_visible')
+    expect(historyFunction).not.toMatch(/userId|user_id:/)
+  })
+})

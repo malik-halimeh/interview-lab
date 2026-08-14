@@ -258,6 +258,37 @@ async function result(user: any, sessionId: string) {
   })
 }
 
+async function personalHistory(user: any, mode: string | null) {
+  if (mode !== 'flexible' && mode !== 'strict') return json({ error: 'Invalid mode.' }, 400)
+  const { data: sessions, error } = await db.from('assessment_sessions')
+    .select('id, mode, completed_at, scaled_grade, readiness_band, standard_error, leaderboard_eligible')
+    .eq('user_id', user.id)
+    .eq('status', 'completed')
+    .eq('mode', mode)
+    .order('completed_at', { ascending: false })
+    .limit(50)
+  if (error) throw error
+  const sessionIds = (sessions ?? []).map((session) => session.id)
+  const { data: responses, error: responseError } = sessionIds.length
+    ? await db.from('assessment_responses').select('session_id, correct').eq('user_id', user.id).in('session_id', sessionIds)
+    : { data: [], error: null }
+  if (responseError) throw responseError
+  return json((sessions ?? []).map((session) => {
+    const sessionResponses = (responses ?? []).filter((response) => response.session_id === session.id)
+    return {
+      id: session.id,
+      mode: session.mode,
+      completedAt: session.completed_at,
+      grade: session.scaled_grade,
+      band: session.readiness_band,
+      standardError: Number(session.standard_error),
+      leaderboardEligible: session.leaderboard_eligible,
+      correctCount: sessionResponses.filter((response) => response.correct).length,
+      answeredCount: sessionResponses.length
+    }
+  }))
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
   try {
@@ -271,6 +302,9 @@ Deno.serve(async (request) => {
     }
 
     const user = await requireUser(request)
+    if (request.method === 'GET' && path === '/assessment/history') {
+      return await personalHistory(user, new URL(request.url).searchParams.get('mode'))
+    }
     if (request.method === 'POST' && path === '/profile/assessment-consent') {
       const { error } = await db.from('profiles').update({ consented_at: new Date().toISOString() }).eq('id', user.id)
       if (error) throw error
